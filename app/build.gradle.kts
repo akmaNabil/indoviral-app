@@ -6,20 +6,15 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+val keystoreProperties = java.util.Properties()
+val keystorePropsFile = rootProject.file("keystore.properties")
+if (keystorePropsFile.exists()) {
+    keystoreProperties.load(keystorePropsFile.inputStream())
+}
+
 android {
     namespace = "stream.indoviral.app"
     compileSdk = 35
-
-    val keystoreProperties = java.util.Properties()
-    val keystorePropsFile = rootProject.file("keystore.properties")
-    if (keystorePropsFile.exists()) {
-        keystoreProperties.load(keystorePropsFile.inputStream())
-    }
-
-    val storeFile = keystoreProperties.getProperty("storeFile")
-    val keyAlias = keystoreProperties.getProperty("keyAlias")
-    val storePassword = keystoreProperties.getProperty("storePassword")
-    val keyPassword = keystoreProperties.getProperty("keyPassword")
 
     defaultConfig {
         applicationId = "stream.indoviral.app"
@@ -37,11 +32,15 @@ android {
 
     signingConfigs {
         create("release") {
-            if (storeFile != null && keyAlias != null && storePassword != null && keyPassword != null) {
-                storeFile = rootProject.file(storeFile)
-                keyAlias = keyAlias
-                storePassword = storePassword
-                keyPassword = keyPassword
+            val sf = keystoreProperties.getProperty("storeFile")
+            val ka = keystoreProperties.getProperty("keyAlias")
+            val sp = keystoreProperties.getProperty("storePassword")
+            val kp = keystoreProperties.getProperty("keyPassword")
+            if (sf != null && ka != null && sp != null && kp != null) {
+                storeFile = rootProject.file(sf)
+                keyAlias = ka
+                storePassword = sp
+                keyPassword = kp
             }
         }
     }
