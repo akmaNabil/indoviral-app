@@ -6,12 +6,6 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
-val keystoreProperties = java.util.Properties()
-val keystorePropsFile = rootProject.file("keystore.properties")
-if (keystorePropsFile.exists()) {
-    keystoreProperties.load(keystorePropsFile.inputStream())
-}
-
 android {
     namespace = "stream.indoviral.app"
     compileSdk = 35
@@ -32,16 +26,10 @@ android {
 
     signingConfigs {
         create("release") {
-            val sf = keystoreProperties.getProperty("storeFile")
-            val ka = keystoreProperties.getProperty("keyAlias")
-            val sp = keystoreProperties.getProperty("storePassword")
-            val kp = keystoreProperties.getProperty("keyPassword")
-            if (sf != null && ka != null && sp != null && kp != null) {
-                storeFile = rootProject.file(sf)
-                keyAlias = ka
-                storePassword = sp
-                keyPassword = kp
-            }
+            storeFile = rootProject.file("indoviral.jks")
+            keyAlias = "indoviral"
+            storePassword = "indoviral2024"
+            keyPassword = "indoviral2024"
         }
     }
 
