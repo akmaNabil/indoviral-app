@@ -135,6 +135,7 @@ fun RoomScreen(
             if (roomState != null) {
                 UserChipRow(
                     users = roomState.users,
+                    resolveAvatar = { viewModel.resolveAvatarUrl(it) },
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                 )
             }
@@ -144,6 +145,7 @@ fun RoomScreen(
                 modifier = Modifier.weight(1f),
                 messages = state.chatMessages,
                 currentUserId = state.currentUserId,
+                resolveAvatar = { viewModel.resolveAvatarUrl(it) },
                 onSend = { viewModel.sendChat(it) }
             )
         }
@@ -239,6 +241,7 @@ private fun TopBar(
 @Composable
 private fun UserChipRow(
     users: List<RoomUser>,
+    resolveAvatar: (String?) -> String?,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -256,7 +259,7 @@ private fun UserChipRow(
                 ) {
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
-                            .data(user.avatar)
+                            .data(resolveAvatar(user.avatar))
                             .crossfade(true)
                             .build(),
                         contentDescription = user.username,
@@ -283,6 +286,7 @@ private fun ChatSection(
     modifier: Modifier = Modifier,
     messages: List<ChatMessage>,
     currentUserId: Int,
+    resolveAvatar: (String?) -> String?,
     onSend: (String) -> Unit
 ) {
     var inputText by remember { mutableStateOf("") }
@@ -320,7 +324,7 @@ private fun ChatSection(
             }
             items(messages, key = { "${it.userId}_${it.time}" }) { msg ->
                 val isSelf = msg.userId == currentUserId
-                ChatMessageRow(msg = msg, isSelf = isSelf, context = context)
+                ChatMessageRow(msg = msg, isSelf = isSelf, resolveAvatar = resolveAvatar, context = context)
             }
         }
 
@@ -376,6 +380,7 @@ private fun ChatSection(
 private fun ChatMessageRow(
     msg: ChatMessage,
     isSelf: Boolean,
+    resolveAvatar: (String?) -> String?,
     context: android.content.Context
 ) {
     Row(
@@ -385,7 +390,7 @@ private fun ChatMessageRow(
         if (!isSelf) {
             AsyncImage(
                 model = ImageRequest.Builder(context)
-                    .data(msg.avatar)
+                    .data(resolveAvatar(msg.avatar))
                     .crossfade(true)
                     .build(),
                 contentDescription = msg.username,
@@ -430,7 +435,7 @@ private fun ChatMessageRow(
             Spacer(modifier = Modifier.width(8.dp))
             AsyncImage(
                 model = ImageRequest.Builder(context)
-                    .data(msg.avatar)
+                    .data(resolveAvatar(msg.avatar))
                     .crossfade(true)
                     .build(),
                 contentDescription = msg.username,

@@ -111,9 +111,16 @@ class RoomViewModel @Inject constructor(
                     _uiState.update { it.copy(error = msg, shouldExit = true) }
                     return@launch
                 }
-                val room = parseRoomState(response, userId = _uiState.value.currentUserId)
+                val roomObj = response.optJSONObject("room")
+                if (roomObj == null) {
+                    _uiState.update { it.copy(error = "Gagal membuat room", shouldExit = true) }
+                    return@launch
+                }
+                val room = parseRoomState(roomObj, userId = _uiState.value.currentUserId)
                 if (room != null) {
                     setupRoom(room, video, isHost = true)
+                } else {
+                    _uiState.update { it.copy(error = "Gagal membuat room", shouldExit = true) }
                 }
             }
         }
@@ -129,7 +136,12 @@ class RoomViewModel @Inject constructor(
                     _uiState.update { it.copy(error = msg, shouldExit = true) }
                     return@launch
                 }
-                val room = parseRoomState(response, userId = _uiState.value.currentUserId)
+                val roomObj = response.optJSONObject("room")
+                if (roomObj == null) {
+                    _uiState.update { it.copy(error = "Gagal bergabung room", shouldExit = true) }
+                    return@launch
+                }
+                val room = parseRoomState(roomObj, userId = _uiState.value.currentUserId)
                 if (room != null) {
                     val video = Video(
                         id = room.videoId,
@@ -140,6 +152,8 @@ class RoomViewModel @Inject constructor(
                         size = 0
                     )
                     setupRoom(room, video, isHost = false)
+                } else {
+                    _uiState.update { it.copy(error = "Gagal bergabung room", shouldExit = true) }
                 }
             }
         }
@@ -199,6 +213,11 @@ class RoomViewModel @Inject constructor(
 
     fun clearToast() {
         _uiState.update { it.copy(toastMessage = null) }
+    }
+
+    fun resolveAvatarUrl(path: String?): String? {
+        if (path.isNullOrBlank()) return null
+        return if (path.startsWith("http")) path else baseUrl.trimEnd('/') + "/" + path.trimStart('/')
     }
 
     // Host sync

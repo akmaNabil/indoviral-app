@@ -1,5 +1,8 @@
 package stream.indoviral.app.ui.lobby
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -38,6 +41,20 @@ fun LobbyScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
 
+    val context = LocalContext.current
+    val videoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            val bytes = context.contentResolver.openInputStream(it)?.readBytes()
+            val mimeType = context.contentResolver.getType(it) ?: "video/mp4"
+            val name = it.lastPathSegment ?: "video.mp4"
+            if (bytes != null) {
+                viewModel.onVideoFilePicked(bytes, mimeType, name)
+            }
+        }
+    }
+
     LaunchedEffect(state.createRoomVideoId) {
         state.createRoomVideoId?.let { videoId ->
             onNavigateToRoom(videoId, null)
@@ -67,7 +84,7 @@ fun LobbyScreen(
                     state.user?.let { user ->
                         AsyncImage(
                             model = ImageRequest.Builder(LocalContext.current)
-                                .data(user.avatar)
+                                .data(viewModel.resolveAvatarUrl(user.avatar))
                                 .crossfade(true)
                                 .build(),
                             contentDescription = "Avatar",
@@ -108,7 +125,7 @@ fun LobbyScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Button(
-                    onClick = { /* Upload handled by web */ },
+                    onClick = { viewModel.showUploadDialog() },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                     modifier = Modifier.weight(1f)
                 ) {
@@ -246,6 +263,81 @@ fun LobbyScreen(
                 containerColor = MaterialTheme.colorScheme.surface
             )
         }
+    }
+
+    // Upload Video Dialog
+    if (state.showUploadDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                if (!state.isUploading) viewModel.dismissUploadDialog()
+            },
+            title = { Text("Upload Video") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(
+                        "Pilih file video (MP4/MKV/WebM) dan beri judul.",
+                        fontSize = 13.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    OutlinedTextField(
+                        value = state.uploadTitle,
+                        onValueChange = viewModel::onUploadTitleChanged,
+                        label = { Text("Judul video") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                        )
+                    )
+                    Button(
+                        onClick = { videoPickerLauncher.launch("video/*") },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !state.isUploading,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.secondary
+                        )
+                    ) {
+                        Text(
+                            if (state.uploadPickedName != null) state.uploadPickedName!! else "Pilih File Video",
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                    if (state.isUploading) {
+                        LinearProgressIndicator(
+                            modifier = Modifier.fillMaxWidth(),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            "Mengupload...",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = { viewModel.uploadVideo() },
+                    enabled = state.uploadBytes != null && !state.isUploading,
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                ) {
+                    Text(if (state.isUploading) "Mengupload..." else "Upload")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { viewModel.dismissUploadDialog() },
+                    enabled = !state.isUploading
+                ) {
+                    Text("Batal")
+                }
+            },
+            containerColor = MaterialTheme.colorScheme.surface
+        )
     }
 }
 

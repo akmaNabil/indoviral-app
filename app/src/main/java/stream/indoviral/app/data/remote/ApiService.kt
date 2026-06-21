@@ -33,6 +33,13 @@ interface ApiService {
     @GET("api/videos")
     suspend fun getVideos(): Response<List<Video>>
 
+    @POST("api/videos")
+    @Multipart
+    suspend fun uploadVideo(
+        @Part video: MultipartBody.Part,
+        @Part("title") title: RequestBody
+    ): Response<Video>
+
     @GET("api/rooms")
     suspend fun getRooms(): Response<List<RoomInfo>>
 }
