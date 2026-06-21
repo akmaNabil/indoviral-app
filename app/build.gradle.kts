@@ -10,6 +10,17 @@ android {
     namespace = "stream.indoviral.app"
     compileSdk = 35
 
+    val keystoreProperties = java.util.Properties()
+    val keystorePropsFile = rootProject.file("keystore.properties")
+    if (keystorePropsFile.exists()) {
+        keystoreProperties.load(keystorePropsFile.inputStream())
+    }
+
+    val storeFile = keystoreProperties.getProperty("storeFile")
+    val keyAlias = keystoreProperties.getProperty("keyAlias")
+    val storePassword = keystoreProperties.getProperty("storePassword")
+    val keyPassword = keystoreProperties.getProperty("keyPassword")
+
     defaultConfig {
         applicationId = "stream.indoviral.app"
         minSdk = 24
@@ -24,6 +35,17 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            if (storeFile != null && keyAlias != null && storePassword != null && keyPassword != null) {
+                storeFile = rootProject.file(storeFile)
+                keyAlias = keyAlias
+                storePassword = storePassword
+                keyPassword = keyPassword
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -32,6 +54,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release")
         }
         debug {
             isMinifyEnabled = false
