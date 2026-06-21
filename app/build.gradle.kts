@@ -25,7 +25,7 @@ android {
     }
 
     signingConfigs {
-        create("release") {
+        create("indeViral") {
             storeFile = rootProject.file("indoviral.jks")
             keyAlias = "indoviral"
             storePassword = "indoviral2024"
@@ -41,7 +41,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("release")
+            signingConfig = signingConfigs.getByName("indeViral")
         }
         debug {
             isMinifyEnabled = false
