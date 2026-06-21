@@ -28,7 +28,7 @@ jobs:
         run: |
           APK=$(find app/build -name "*.apk" | head -1)
           echo "APK: $APK"
-          jarsigner -verify -verbose -certs "$APK" 2>&1 | tail -5
+          $ANDROID_HOME/build-tools/35.0.0/apksigner verify --verbose "$APK"
 
       - name: List APKs
         run: find app/build -name "*.apk" -ls
